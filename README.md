@@ -115,6 +115,8 @@ php artisan queue:work       # in a second terminal — required for Excel impor
 
 GraphQL endpoint: `POST /api/graphql`. Export endpoint: `GET /api/employees/export`.
 
+Postman collection: [postman/Employee-API.postman_collection.json](postman/Employee-API.postman_collection.json)
+
 ### Get a token
 
 ```bash
