@@ -1,0 +1,83 @@
+"A datetime string with format `Y-m-d H:i:s`, e.g. `2018-05-23 13:43:32`."
+scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
+
+"Can be used as an argument to upload files using https://github.com/jaydenseric/graphql-multipart-request-spec"
+scalar Upload @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\Upload")
+
+type User {
+    id: ID!
+    name: String!
+    username: String!
+    email: String!
+    created_at: DateTime!
+    updated_at: DateTime!
+}
+
+type ImportResult {
+    message: String!
+    queued: Boolean!
+    import_id: String!
+}
+
+type ImportStatus {
+    "queued | processing | completed | failed | unknown"
+    status: String!
+    processed: Int!
+    total: Int!
+}
+
+type AuthPayload {
+    access_token: String!
+    token_type: String!
+    expires_in: Int!
+    refresh_token: String
+}
+
+type Employee {
+    id: ID!
+    first_name: String!
+    last_name: String!
+    email: String!
+    phone: String!
+    address: String!
+    salary: Float!
+    created_at: DateTime!
+    updated_at: DateTime!
+}
+
+input UpdateEmployeeInput @validator {
+    id: ID!
+    first_name: String
+    last_name: String
+    email: String
+    phone: String
+    address: String
+    salary: Float
+}
+
+type Query {
+    me: User @auth(guards: ["api"])
+
+    employees: [Employee!]! @paginate(defaultCount: 25, maxCount: 100, scopes: ["ordered"]) @guard
+
+    employee(id: ID! @eq): Employee @find @guard
+
+    importStatus(id: String! @rules(apply: ["required", "string"])): ImportStatus!
+        @field(resolver: "App\\GraphQL\\Queries\\ImportStatus")
+        @guard
+}
+
+type Mutation {
+    login(
+        username: String! @rules(apply: ["required", "string"])
+        password: String! @rules(apply: ["required", "string"])
+    ): AuthPayload! @field(resolver: "App\\GraphQL\\Mutations\\Login")
+
+    updateEmployee(input: UpdateEmployeeInput! @spread): Employee @update @guard
+
+    deleteEmployee(id: ID! @whereKey): Employee @delete @guard
+
+    importEmployees(
+        file: Upload! @rules(apply: ["required", "file", "max:51200"])
+    ): ImportResult! @field(resolver: "App\\GraphQL\\Mutations\\ImportEmployees") @guard
+}
